@@ -1,15 +1,35 @@
+# Gradle files
+.gradle/
+build/
+
+# IntelliJ IDEA files
+.idea/
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+*.iws
+*.ipr
+
+# Android Studio files
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Local configuration
 local.properties
+
+# Log files
+*.log
+
+# Keystore files
+*.jks
+*.keystore
+
+# Built artifacts
+*.apk
+*.aar
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# MediaPipe / Task files if generated
+# *.task (usually you want to keep the model, but if it's downloaded/generated it might be ignored)
