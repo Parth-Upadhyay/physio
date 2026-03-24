@@ -210,11 +210,17 @@ class MainActivity : ComponentActivity() {
                 val date = LocalDate.parse(key, DateTimeFormatter.ISO_LOCAL_DATE)
                 val countsStr = value as String
                 if (countsStr.isNotEmpty()) {
-                    val counts = countsStr.split(",").associate {
+                    val counts = countsStr.split(",").mapNotNull {
                         val parts = it.split(":")
-                        ExerciseType.valueOf(parts[0]) to parts[1].toInt()
-                    }.toMutableMap()
-                    history[date] = counts
+                        try {
+                            ExerciseType.valueOf(parts[0]) to parts[1].toInt()
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }.toMap().toMutableMap()
+                    if (counts.isNotEmpty()) {
+                        history[date] = counts
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("History", "Failed to load entry: $key", e)
@@ -374,7 +380,6 @@ class MainActivity : ComponentActivity() {
             ExerciseType.BICEP_CURL -> "Focus on full range and control."
             ExerciseType.PENDULUM -> "Loosen the shoulder with gentle circles."
             ExerciseType.CROSSOVER_STRETCH -> "Stretch the outer shoulder muscles."
-            ExerciseType.TOWEL_STRETCH -> "Improve vertical shoulder flexibility."
             ExerciseType.EXTERNAL_ROTATION -> "Target the rotator cuff muscles."
             ExerciseType.WALL_CLIMB -> "Improve overhead range of motion."
         }

@@ -24,9 +24,6 @@ class ExerciseAnalyzer {
     private var isSetupPhase = true
     private val setupDuration = 6000L 
 
-    // Hold tracking
-    private var holdBaseAngle = 0.0
-
     // Joint tracking for UI
     val outOfPositionJoints = mutableSetOf<Int>()
 
@@ -35,10 +32,6 @@ class ExerciseAnalyzer {
     private val timestampHistory = mutableListOf<Long>()
     private var lastWristY = 0f
     
-    // ROM Stats for session
-    var sessionMaxShoulderFlexion = 0.0
-    var sessionMaxExternalRotation = 0.0
-
     private val cameraInstructions = mapOf(
         ExerciseType.SQUAT to "📸 PLACE CAMERA AT WAIST HEIGHT (SIDE VIEW)",
         ExerciseType.BICEP_CURL to "📸 PLACE CAMERA AT CHEST HEIGHT (FRONT VIEW)",
@@ -65,9 +58,6 @@ class ExerciseAnalyzer {
         wristHistory.clear()
         timestampHistory.clear()
         lastWristY = 0f
-        sessionMaxShoulderFlexion = 0.0
-        sessionMaxExternalRotation = 0.0
-        holdBaseAngle = 0.0
         isSetupPhase = true
         setupStartTime = System.currentTimeMillis()
         outOfPositionJoints.clear()
@@ -140,15 +130,12 @@ class ExerciseAnalyzer {
         val k = world[kIdx]
         val a = world[aIdx]
 
-        // 1. Check Knee Bend: hip-knee-ankle (slight bend)
         val kneeAngle = calculate3DAngle(h, k, a)
         val isKneeBent = kneeAngle < 172.0 && kneeAngle > 130.0
 
-        // 2. Check Lean Forward: Shoulder forward of hips
         val leanAngle = calculate3DAngle(Landmark.create(h.x(), h.y() - 1f, h.z()), h, s)
         val isLeaning = leanAngle > 12.0
 
-        // 3. Check Hanging Freely
         val isHanging = w.y() > s.y() + 0.12f
 
         if (!isKneeBent || !isLeaning || !isHanging) {
