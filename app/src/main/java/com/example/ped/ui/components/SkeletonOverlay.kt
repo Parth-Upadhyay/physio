@@ -9,7 +9,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 
 @Composable
-fun SkeletonOverlay(points: List<Pair<Float, Float>>, showFullBody: Boolean) {
+fun SkeletonOverlay(
+    points: List<Pair<Float, Float>>, 
+    showFullBody: Boolean,
+    outOfPositionJoints: Set<Int> = emptySet()
+) {
     Canvas(modifier = Modifier.fillMaxSize()) {
         if (points.size < 33) return@Canvas
 
@@ -46,9 +50,10 @@ fun SkeletonOverlay(points: List<Pair<Float, Float>>, showFullBody: Boolean) {
         }
 
         joints.forEach { index ->
+            val isOutOfPosition = outOfPositionJoints.contains(index)
             drawCircle(
-                color = Color(0xFF00E5FF),
-                radius = 8f,
+                color = if (isOutOfPosition) Color.Red else Color(0xFF00E5FF),
+                radius = if (isOutOfPosition) 12f else 8f,
                 center = getP(index)
             )
         }
