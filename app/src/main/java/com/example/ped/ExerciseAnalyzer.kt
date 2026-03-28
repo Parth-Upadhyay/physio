@@ -10,6 +10,10 @@ enum class ExerciseType {
 
 class ExerciseAnalyzer {
     var repCount = 0
+    var targetReps = 10
+    var currentSet = 1
+    var totalSets = 3
+    var isBetweenSets = false
     var feedback = "Stand in view"
     private var currentType = ExerciseType.BICEP_CURL
     
@@ -41,6 +45,19 @@ class ExerciseAnalyzer {
         ExerciseType.WALL_CLIMB to "📸 PLACE CAMERA AT SHOULDER HEIGHT (SIDE VIEW)"
     )
 
+    private val motivations = listOf(
+        "Great job! Take a breath.",
+        "You're doing amazing! Keep it up.",
+        "Almost there! Stay strong.",
+        "Excellent form! One more push.",
+        "Consistency is key! You got this.",
+        "You're making great progress!",
+        "Keep pushing, you're doing great!",
+        "Your hard work is paying off!"
+    )
+
+    fun getMotivation(): String = motivations.random()
+
     fun setExercise(type: ExerciseType) {
         if (currentType != type) {
             currentType = type
@@ -50,6 +67,8 @@ class ExerciseAnalyzer {
 
     fun reset() {
         repCount = if (currentType == ExerciseType.PENDULUM) 30 else 0
+        currentSet = 1
+        isBetweenSets = false
         feedback = "Get ready!"
         phase = 0
         holdStartTime = 0L
@@ -63,7 +82,23 @@ class ExerciseAnalyzer {
         outOfPositionJoints.clear()
     }
 
+    fun startNextSet() {
+        repCount = if (currentType == ExerciseType.PENDULUM) 30 else 0
+        isBetweenSets = false
+        phase = 0
+        holdStartTime = 0L
+        isHolding = false
+        lastStateChangeTime = 0L
+        wristHistory.clear()
+        timestampHistory.clear()
+        lastWristY = 0f
+        outOfPositionJoints.clear()
+        feedback = "Ready! Start when you are."
+    }
+
     fun analyze(norm: List<NormalizedLandmark>, world: List<Landmark>) {
+        if (isBetweenSets) return
+
         val now = System.currentTimeMillis()
         outOfPositionJoints.clear()
         
@@ -92,6 +127,20 @@ class ExerciseAnalyzer {
             ExerciseType.WALL_CLIMB -> analyzeWallClimb(norm, world)
             ExerciseType.SQUAT -> analyzeSquat(norm)
             ExerciseType.BICEP_CURL -> analyzeBicepCurl(norm)
+        }
+
+        checkSetCompletion()
+    }
+
+    private fun checkSetCompletion() {
+        val isFinished = if (currentType == ExerciseType.PENDULUM) {
+            repCount <= 0 && isHolding == false
+        } else {
+            repCount >= targetReps
+        }
+
+        if (isFinished && !isBetweenSets) {
+            isBetweenSets = true
         }
     }
 
@@ -228,9 +277,9 @@ class ExerciseAnalyzer {
         val isElbow90 = elbowAngle in 70.0..115.0
         val isParallel = abs(w.y() - e.y()) < 0.15f
         
-        val rotX = abs(w.x() - e.x())
+        val rotX = dummy_atan2(w.x() - e.x(), w.z() - e.z()) // Placeholder
         val rotZ = abs(w.z() - e.z())
-        val rotationAngle = atan2(rotZ.toDouble(), rotX.toDouble()) * 180.0 / PI
+        val rotationAngle = atan2(rotZ.toDouble(), abs(w.x() - e.x()).toDouble()) * 180.0 / PI
 
         if (isElbow90 && isParallel) {
             if (rotationAngle > 12.0) {
@@ -245,6 +294,8 @@ class ExerciseAnalyzer {
             isHolding = false
         }
     }
+    
+    private fun dummy_atan2(y: Float, x: Float): Double = atan2(y.toDouble(), x.toDouble())
 
     private fun analyzeWallClimb(norm: List<NormalizedLandmark>, world: List<Landmark>) {
         val isLeft = getV(norm[15]) > getV(norm[16])
